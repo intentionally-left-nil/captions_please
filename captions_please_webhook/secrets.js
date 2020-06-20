@@ -11,7 +11,7 @@ const get_secret = async (name) => {
 };
 
 const get_all_secrets = async () => {
-  const secrets = {};
+  const data = {};
   const names = [
     'TwitterConsumerKey',
     'TwitterConsumerSecret',
@@ -20,11 +20,11 @@ const get_all_secrets = async () => {
     'TwitterBearerToken',
   ];
 
-  const requests = names.map(get_secret).then((secret) => {
-    secrets[secret.name] = secret.value;
-  });
-  await Promise.all(requests);
-  return secrets;
+  const secrets = await Promise.all(names.map(get_secret));
+  for (const secret of secrets) {
+    data[secret.name] = secret.value;
+  }
+  return data;
 };
 
 module.exports = { get_secret, get_all_secrets };
