@@ -16,7 +16,7 @@ const respond_no_photos = (context, tweet) => {
     status: 200,
   };
   return tweet.reply(
-    "I don't see any photos in the tweet, and I still don't know any good jokes."
+    "I don't see any photos to decode, but I appreciate the shoutout!"
   );
 };
 
@@ -47,7 +47,6 @@ module.exports = async function (context, req) {
     to_reply_id: tweet.data.id_str,
     media: tweet_to_scan.data.entities.media,
   };
-  console.log('Placing new item in the queue');
-  console.log(item);
+  context.bindings.imageQueue = JSON.stringify(item);
   return do_nothing(context);
 };
