@@ -1,7 +1,9 @@
 const respond_to_crc_token = require('./respond_to_crc_token');
 const Tweet = require('../shared/tweet');
+const { whoami } = require('../shared/twitter');
 
 const BOT_HANDLE = '@captions_please';
+let my_id = null;
 
 const do_nothing = (context) => {
   context.res = {
@@ -29,8 +31,12 @@ module.exports = async function (context, req) {
     return do_nothing(context);
   }
 
+  if (!my_id) {
+    my_id = await whoami();
+  }
+
   const tweet = new Tweet(req.body.tweet_create_events[0]);
-  if (!tweet.contains_handle(BOT_HANDLE)) {
+  if (!tweet.contains_handle(BOT_HANDLE) || tweet.data.id_str == my_id) {
     return do_nothing(context);
   }
 

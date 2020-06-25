@@ -83,6 +83,13 @@ const reply = async (tweet_id, message) => {
   });
 };
 
+const whoami = async () => {
+  const response = await get_json_from_twitter(
+    'account/verify_credentials.json'
+  );
+  return response.id_str;
+};
+
 const download_media = async (url) => {
   const secrets = await get_all_secrets();
   const headers = {
@@ -93,4 +100,4 @@ const download_media = async (url) => {
     .then((response) => response.blob());
 };
 
-module.exports = { get_tweet, reply, download_media };
+module.exports = { get_tweet, reply, download_media, whoami };
