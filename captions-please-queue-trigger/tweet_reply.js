@@ -45,7 +45,7 @@ const reply_with_text = async (to_reply_id, paragraphs, index) => {
   }
 
   for (const tweet of group_paragraphs_into_tweets(paragraphs)) {
-    const response = await twitter.reply(to_reply_id, tweet);
+    const response = await twitter.censored_reply(to_reply_id, tweet);
     to_reply_id = response.id_str;
   }
   return to_reply_id;
@@ -58,7 +58,7 @@ const reply_with_caption = async (to_reply_id, caption, index) => {
     message = `Photo ${index + 1}:\n ${message}`;
   }
 
-  const response = await twitter.reply(to_reply_id, message);
+  const response = await twitter.censored_reply(to_reply_id, message);
   return response.id_str;
 };
 

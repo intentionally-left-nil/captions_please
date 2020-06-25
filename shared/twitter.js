@@ -1,7 +1,10 @@
 const crypto = require('crypto');
 const OAuth = require('oauth-1.0a');
 const fetch = require('node-fetch');
+const BadWords = require('bad-words');
 const { get_all_secrets } = require('./secrets');
+
+const badWordFilter = new BadWords();
 
 const create_oauth = (secrets) => {
   const consumer = {
@@ -71,6 +74,9 @@ const get_json_from_twitter = async (...args) => {
 const get_tweet = async (tweet_id) =>
   get_json_from_twitter(`statuses/show/${tweet_id}.json`);
 
+const censored_reply = async (tweet_id, message) =>
+  reply(tweet_id, badWordFilter.clean(message));
+
 const reply = async (tweet_id, message) => {
   const body = {
     status: message,
@@ -100,4 +106,4 @@ const download_media = async (url) => {
     .then((response) => response.blob());
 };
 
-module.exports = { get_tweet, reply, download_media, whoami };
+module.exports = { get_tweet, reply, censored_reply, download_media, whoami };

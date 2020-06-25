@@ -1,6 +1,7 @@
 const respond_to_crc_token = require('./respond_to_crc_token');
 const Tweet = require('../shared/tweet');
-const { whoami } = require('../shared/twitter');
+const { whoami, reply } = require('../shared/twitter');
+const twitter = require('../shared/twitter');
 
 const BOT_HANDLE = '@captions_please';
 let my_id = null;
@@ -20,7 +21,7 @@ const respond_no_photos = (context, tweet, has_invalid_media) => {
   const message = has_invalid_media
     ? 'I only know how to decode photos, not gifs or videos. Sorry!'
     : "I don't see any photo's to decode, but I appreciate the shoutout!";
-  return tweet.reply(message);
+  return twitter.reply(tweet.data.id_str, message);
 };
 
 module.exports = async function (context, req) {

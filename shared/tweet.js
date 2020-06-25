@@ -38,10 +38,6 @@ class Tweet {
     }
     return null;
   }
-
-  async reply(message) {
-    return await twitter.reply(this.data.id_str, message);
-  }
 }
 
 module.exports = Tweet;
