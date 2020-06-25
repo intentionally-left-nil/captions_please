@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const OAuth = require('oauth-1.0a');
 const fetch = require('node-fetch');
 const { get_all_secrets } = require('./secrets');
-const { InteractiveBrowserCredential } = require('@azure/identity');
 
 const create_oauth = (secrets) => {
   const consumer = {
@@ -57,12 +56,16 @@ const get_from_twitter = async (endpoint, options = { method: 'GET' }) => {
   return fetch(url, options);
 };
 
-const get_json_from_twitter = async (...args) => {
-  response = await get_from_twitter(...args);
-  if (response.status != 200) {
+const validate_response = (response) => {
+  if (!response.ok) {
     return Promise.reject(`Invalid response status ${response.status}`);
   }
-  return response.json();
+  return Promise.resolve(response);
+};
+
+const get_json_from_twitter = async (...args) => {
+  response = await get_from_twitter(...args);
+  return validate_response(response).then((response) => response.json());
 };
 
 const get_tweet = async (tweet_id) =>
