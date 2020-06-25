@@ -1,8 +1,8 @@
-const { download_media } = require('../shared/twitter');
 const allSettled = require('promise.allsettled');
+const vision = require('./vision');
 
 const process_image = async (url) => {
-  return download_media(url);
+  return vision(url);
 };
 
 const get_successful_promises = (settled_promises) =>
@@ -19,7 +19,7 @@ module.exports = async function (context, item) {
   );
 
   for (result of successful_results) {
-    console.log('downloaded the image to memory');
+    console.log('parsed image successfully');
     console.log(result);
   }
 };

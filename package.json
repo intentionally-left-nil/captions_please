@@ -7,8 +7,10 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
+    "@azure/cognitiveservices-computervision": "^7.0.0",
     "@azure/identity": "^1.0.3",
     "@azure/keyvault-secrets": "^4.0.4",
+    "@azure/ms-rest-js": "^2.0.7",
     "node-fetch": "^2.6.0",
     "oauth-1.0a": "^2.2.6",
     "promise.allsettled": "^1.0.2"
