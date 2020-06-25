@@ -1,4 +1,4 @@
-const twitter = require('../shared/twitter');
+const twitter = require('./twitter');
 
 class Tweet {
   constructor(data) {

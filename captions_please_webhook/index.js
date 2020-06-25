@@ -1,5 +1,5 @@
 const respond_to_crc_token = require('./respond_to_crc_token');
-const Tweet = require('./tweet');
+const Tweet = require('../shared/tweet');
 
 const BOT_HANDLE = '@captions_please';
 
