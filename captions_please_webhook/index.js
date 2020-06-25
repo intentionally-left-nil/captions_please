@@ -45,7 +45,7 @@ module.exports = async function (context, req) {
 
   const item = {
     to_reply_id: tweet.data.id_str,
-    media: tweet_to_scan.data.entities.media,
+    media: tweet_to_scan.get_photos(),
   };
   context.bindings.imageQueue = JSON.stringify(item);
   return do_nothing(context);

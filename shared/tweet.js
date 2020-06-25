@@ -10,10 +10,16 @@ class Tweet {
   }
 
   has_photos() {
-    return (
-      this.data.entities.media &&
-      this.data.entities.media.some(({ type }) => type == 'photo')
-    );
+    return this.get_photos().length > 0;
+  }
+
+  get_photos() {
+    const extended_media = this.data.extended_entities
+      ? this.data.extended_entities.media
+      : null;
+    const single_media = this.data.entities ? this.data.entities.media : null;
+    const media = extended_media || single_media;
+    return media ? media.filter(({ type }) => type == 'photo') : [];
   }
 
   async get_parent_tweet() {

@@ -41,7 +41,7 @@ const group_paragraphs_into_tweets = (paragraphs) => {
 
 const reply_with_text = async (to_reply_id, paragraphs, index) => {
   if (index != null) {
-    paragraphs[0][0] = `Photo ${index + 1}: ${paragraphs[0][0]}`;
+    paragraphs[0][0] = `Photo ${index + 1}:\n ${paragraphs[0][0]}`;
   }
 
   for (const tweet of group_paragraphs_into_tweets(paragraphs)) {
@@ -52,11 +52,12 @@ const reply_with_text = async (to_reply_id, paragraphs, index) => {
 };
 
 const reply_with_caption = async (to_reply_id, caption, index) => {
+  const message = `Image Description: ${caption}`;
+
   if (index != null) {
-    caption = `Photo ${index + 1}: ${caption}`;
+    message = `Photo ${index + 1}:\n ${message}`;
   }
 
-  const message = `Image Description: ${caption}`;
   const response = await twitter.reply(to_reply_id, message);
   return response.id_str;
 };
