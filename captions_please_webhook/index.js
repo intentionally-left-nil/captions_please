@@ -26,19 +26,26 @@ const respond_no_photos = (context, tweet, has_invalid_media) => {
 
 module.exports = async function (context, req) {
   if (req.method == 'GET') {
+    console.info('Got a CRC get request from twitter');
     return respond_to_crc_token(context, req);
   }
 
+  console.info('New webhook request:');
+  console.info(req.body);
+
   if (!req.body.tweet_create_events) {
+    console.info('No body, early return');
     return do_nothing(context);
   }
 
   if (!my_id) {
     my_id = await whoami();
+    console.info('Getting the bot id of ' + my_id);
   }
 
   const tweet = new Tweet(req.body.tweet_create_events[0]);
   if (!tweet.contains_handle(BOT_HANDLE) || tweet.data.id_str == my_id) {
+    console.info('Not directed at the bot, early return');
     return do_nothing(context);
   }
 
@@ -47,6 +54,7 @@ module.exports = async function (context, req) {
     parent_tweet = await tweet.get_parent_tweet();
     if (!parent_tweet || !parent_tweet.has_photos()) {
       const has_invalid_media = tweet.has_media() || parent_tweet.has_media();
+      console.info('No photos to parse, early return');
       return respond_no_photos(context, tweet, has_invalid_media);
     }
   }
@@ -56,6 +64,8 @@ module.exports = async function (context, req) {
     to_reply_id: tweet.data.id_str,
     media: tweet_to_scan.get_photos(),
   };
+  console.info('Placing the message on the queue for parsing');
+  console.info(item);
   context.bindings.imageQueue = JSON.stringify(item);
   return do_nothing(context);
 };
