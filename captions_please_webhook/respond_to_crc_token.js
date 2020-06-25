@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { get_secret } = require('./secrets');
+const { get_secret } = require('../shared/secrets');
 
 module.exports = async (context, req) => {
   const crc_token = req.query.crc_token;
