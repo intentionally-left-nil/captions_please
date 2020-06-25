@@ -1,6 +1,7 @@
 const allSettled = require('promise.allsettled');
 const vision = require('./vision');
 const tweet_reply = require('./tweet_reply');
+const twitter = require('../shared/twitter');
 
 const get_successful_promises = (settled_promises) =>
   settled_promises
@@ -23,6 +24,12 @@ module.exports = async (context, item) => {
   );
 
   let { to_reply_id } = item;
+  if (image_items.length == 0) {
+    await twitter.reply(
+      to_reply_id,
+      'Oh this is embarrasing, but there was an error trying to decode the tweet. Sorry!'
+    );
+  }
 
   asyncForEach(image_items, async (image_data, i) => {
     const index = image_items.length > 1 ? i : undefined;
