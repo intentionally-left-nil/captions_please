@@ -83,4 +83,14 @@ const reply = async (tweet_id, message) => {
   });
 };
 
-module.exports = { get_tweet, reply };
+const download_media = async (url) => {
+  const secrets = await get_all_secrets();
+  const headers = {
+    Authorization: get_authorization_header(url, { method: 'GET' }, secrets),
+  };
+  return fetch(url, { headers })
+    .then(validate_response)
+    .then((response) => response.blob());
+};
+
+module.exports = { get_tweet, reply, download_media };
