@@ -77,7 +77,7 @@ const reply = async (tweet_id, message) => {
     in_reply_to_status_id: tweet_id,
     auto_populate_reply_metadata: true,
   };
-  get_json_from_twitter('statuses/update.json', {
+  return get_json_from_twitter('statuses/update.json', {
     method: 'POST',
     body,
   });

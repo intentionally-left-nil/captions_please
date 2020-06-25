@@ -5,6 +5,12 @@ const ComputerVisionClient = require('@azure/cognitiveservices-computervision')
 
 const DETECT_ORIENTATION = true;
 
+const sanitize = (paragraphs) => {
+  paragraphs = paragraphs.map((lines) => lines.filter((line) => line.trim()));
+  paragraphs = paragraphs.filter((lines) => lines.length > 0);
+  return paragraphs.length > 0 ? paragraphs : null;
+};
+
 const getText = async (computerVisionClient, url) => {
   const response = await computerVisionClient.recognizePrintedText(
     DETECT_ORIENTATION,
@@ -13,8 +19,10 @@ const getText = async (computerVisionClient, url) => {
   if (!response.regions.length) {
     return null;
   }
-  return response.regions.map((region) =>
-    region.lines.map((line) => line.words.map(({ text }) => text).join(' '))
+  return sanitize(
+    response.regions.map((region) =>
+      region.lines.map((line) => line.words.map(({ text }) => text).join(' '))
+    )
   );
 };
 
