@@ -29,7 +29,7 @@ const group_paragraphs_into_tweets = (paragraphs) => {
         last_tweet &&
         last_tweet.length + line.length + 1 <= TWEET_CHAR_LIMIT
       ) {
-        paragraph_tweets[paragraph_tweets.length - 1] += '\n' + line;
+        paragraph_tweets[paragraph_tweets.length - 1] += ' ' + line;
       } else {
         paragraph_tweets.push(line);
       }
