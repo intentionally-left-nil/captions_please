@@ -12,14 +12,15 @@ const do_nothing = (context) => {
   context.done();
 };
 
-const respond_no_photos = (context, tweet) => {
+const respond_no_photos = (context, tweet, has_invalid_media) => {
   // Even on failure, we'll respond 200, as there's nothing to retry here
   context.res = {
     status: 200,
   };
-  return tweet.reply(
-    "I don't see any photos to decode, but I appreciate the shoutout!"
-  );
+  const message = has_invalid_media
+    ? 'I only know how to decode photos, not gifs or videos. Sorry!'
+    : "I don't see any photo's to decode, but I appreciate the shoutout!";
+  return tweet.reply(message);
 };
 
 module.exports = async function (context, req) {
@@ -44,7 +45,8 @@ module.exports = async function (context, req) {
   if (!tweet.has_photos()) {
     parent_tweet = await tweet.get_parent_tweet();
     if (!parent_tweet || !parent_tweet.has_photos()) {
-      return respond_no_photos(context, tweet);
+      const has_invalid_media = tweet.has_media() || parent_tweet.has_media();
+      return respond_no_photos(context, tweet, has_invalid_media);
     }
   }
   const tweet_to_scan = parent_tweet || tweet;

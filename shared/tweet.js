@@ -13,13 +13,20 @@ class Tweet {
     return this.get_photos().length > 0;
   }
 
+  has_media() {
+    return this.get_media().length > 0;
+  }
+
   get_photos() {
+    return this.get_media().filter(({ type }) => type == 'photo');
+  }
+
+  get_media() {
     const extended_media = this.data.extended_entities
       ? this.data.extended_entities.media
       : null;
     const single_media = this.data.entities ? this.data.entities.media : null;
-    const media = extended_media || single_media;
-    return media ? media.filter(({ type }) => type == 'photo') : [];
+    return extended_media || single_media || [];
   }
 
   async get_parent_tweet() {
