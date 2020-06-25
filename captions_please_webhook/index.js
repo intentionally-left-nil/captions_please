@@ -53,7 +53,8 @@ module.exports = async function (context, req) {
   if (!tweet.has_photos()) {
     parent_tweet = await tweet.get_parent_tweet();
     if (!parent_tweet || !parent_tweet.has_photos()) {
-      const has_invalid_media = tweet.has_media() || parent_tweet.has_media();
+      const has_invalid_media =
+        tweet.has_media() || (parent_tweet && parent_tweet.has_media());
       console.info('No photos to parse, early return');
       return respond_no_photos(context, tweet, has_invalid_media);
     }
