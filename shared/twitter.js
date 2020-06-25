@@ -79,7 +79,7 @@ const get_json_from_twitter = async (...args) => {
 };
 
 const get_tweet = async (tweet_id) =>
-  get_json_from_twitter(`statuses/show/${tweet_id}.json`);
+  get_json_from_twitter(`statuses/show/${tweet_id}.json?include_entities=true`);
 
 const censored_reply = async (tweet_id, message) =>
   reply(tweet_id, badWordFilter.clean(message));
