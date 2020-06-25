@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const OAuth = require('oauth-1.0a');
+const querystring = require('querystring');
 const fetch = require('node-fetch');
 const BadWords = require('bad-words');
 const { get_all_secrets } = require('./secrets');
@@ -23,26 +24,29 @@ const create_oauth = (secrets) => {
   });
 };
 
+// Handling the POST body taken from
+// https://github.com/draftbit/twitter-lite/blob/master/twitter.js
+function percentEncode(string) {
+  return string
+    .replace(/!/g, '%21')
+    .replace(/\*/g, '%2A')
+    .replace(/'/g, '%27')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29');
+}
+
 const get_authorization_header = (url, options, secrets) => {
   const oauth = create_oauth(secrets);
   const token = {
     key: secrets.TwitterAccessToken,
     secret: secrets.TwitterAccessTokenSecret,
   };
-  const oauth_data = oauth.authorize(
+  const authorization = oauth.authorize(
     { url, method: options.method, data: options.body },
     token
   );
-  const headers = oauth.toHeader(oauth_data);
+  const headers = oauth.toHeader(authorization);
   return headers.Authorization;
-};
-
-const encode_body = (body) => {
-  const params = new URLSearchParams();
-  for ([key, value] of Object.entries(body)) {
-    params.append(key, value);
-  }
-  return params;
 };
 
 const get_from_twitter = async (endpoint, options = { method: 'GET' }) => {
@@ -51,9 +55,12 @@ const get_from_twitter = async (endpoint, options = { method: 'GET' }) => {
   options.headers = Object.assign({}, options.headers, {
     Authorization: get_authorization_header(url, options, secrets),
   });
-
-  if (options.method == 'POST' || options.method == 'PUT') {
-    options.body = encode_body(options.body);
+  if (options.method != 'GET') {
+    // Handling the POST body taken from
+    // https://github.com/draftbit/twitter-lite/blob/master/twitter.js
+    options.body = percentEncode(querystring.stringify(options.body));
+    options.headers = options.headers || {};
+    options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
   }
 
   return fetch(url, options);
