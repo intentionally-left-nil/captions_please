@@ -30,8 +30,8 @@ module.exports = async function (context, req) {
     return respond_to_crc_token(context, req);
   }
 
-  console.info('New webhook request:');
-  console.info(req.body);
+  console.log('New webhook request:');
+  console.log(req.body);
 
   if (!req.body.tweet_create_events) {
     console.info('No body, early return');
