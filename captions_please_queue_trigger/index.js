@@ -15,8 +15,8 @@ async function asyncForEach(array, callback) {
 }
 
 module.exports = async (context, item) => {
-  console.log('Picking up the queue item');
-  console.log(item);
+  context.log('Picking up the queue item');
+  context.log(item);
   const image_data_promises = item.media.map(({ media_url_https }) =>
     vision(media_url_https)
   );

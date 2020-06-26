@@ -45,7 +45,6 @@ const reply_with_text = async (to_reply_id, paragraphs, index) => {
   }
 
   for (const tweet of group_paragraphs_into_tweets(paragraphs)) {
-    console.info('tweeting as a reply to ' + to_reply_id);
     const response = await twitter.censored_reply(to_reply_id, tweet);
     to_reply_id = response.id_str;
   }
