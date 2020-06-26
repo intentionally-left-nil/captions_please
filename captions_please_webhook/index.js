@@ -20,7 +20,7 @@ const respond_no_photos = (context, tweet, has_invalid_media) => {
   };
   const message = has_invalid_media
     ? 'I only know how to decode photos, not gifs or videos. Sorry!'
-    : "I don't see any photo's to decode, but I appreciate the shoutout!";
+    : "I don't see any photos to decode, but I appreciate the shoutout!";
   return twitter.reply(tweet.data.id_str, message);
 };
 
