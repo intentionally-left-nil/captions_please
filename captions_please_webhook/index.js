@@ -21,7 +21,7 @@ const respond_no_photos = (context, tweet, has_invalid_media) => {
   const message = has_invalid_media
     ? 'I only know how to decode photos, not gifs or videos. Sorry!'
     : "I don't see any photos to decode, but I appreciate the shoutout!";
-  return twitter.reply(tweet.data.id_str, message);
+  return twitter.reply(tweet.id(), message);
 };
 
 module.exports = async function (context, req) {
@@ -38,14 +38,24 @@ module.exports = async function (context, req) {
     return do_nothing(context);
   }
 
+  const tweet = new Tweet(req.body.tweet_create_events[0]);
+  if (!tweet.is_tweet() && !tweet.is_reply()) {
+    context.log.info('Not a tweet or reply, early return');
+    return do_nothing(context);
+  }
+
+  if (!tweet.contains_handle(BOT_HANDLE)) {
+    context.log.info('Not mentioned in the body message, early return');
+    return do_nothing(context);
+  }
+
   if (!my_id) {
     my_id = await whoami();
     context.log.info('Getting the bot id of ' + my_id);
   }
 
-  const tweet = new Tweet(req.body.tweet_create_events[0]);
-  if (!tweet.contains_handle(BOT_HANDLE) || tweet.data.id_str == my_id) {
-    context.log.info('Not directed at the bot, early return');
+  if (tweet.id() == my_id) {
+    context.log.info('Author is myself, early return');
     return do_nothing(context);
   }
 
@@ -65,7 +75,7 @@ module.exports = async function (context, req) {
   const tweet_to_scan = parent_tweet || tweet;
 
   const item = {
-    to_reply_id: tweet.data.id_str,
+    to_reply_id: tweet.id(),
     media: tweet_to_scan.get_photos(),
   };
   context.log('Placing the message on the queue for parsing');

@@ -21,6 +21,35 @@ class Tweet {
     return this.get_media().filter(({ type }) => type == 'photo');
   }
 
+  is_retweet() {
+    return this.data.retweeted_status != null;
+  }
+
+  is_quote_tweet() {
+    return this.data.is_quote_status;
+  }
+
+  is_mention() {
+    return this.data.user_has_blocked != null;
+  }
+
+  is_reply() {
+    return this.data.in_reply_to_status_id_str != null;
+  }
+
+  is_tweet() {
+    return (
+      !this.is_reply() &&
+      !this.is_mention() &&
+      !this.is_retweet() &&
+      !this.is_quote_tweet()
+    );
+  }
+
+  id() {
+    return this.data.id_str;
+  }
+
   get_media() {
     const extended_media = this.data.extended_entities
       ? this.data.extended_entities.media
