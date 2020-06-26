@@ -39,7 +39,7 @@ module.exports = async function (context, req) {
   }
 
   const tweet = new Tweet(req.body.tweet_create_events[0]);
-  if (!tweet.is_tweet() && !tweet.is_reply()) {
+  if (!tweet.is_tweet() && !tweet.is_reply() && !tweet.is_quote_tweet()) {
     context.log.info('Not a tweet or reply, early return');
     return do_nothing(context);
   }
@@ -61,7 +61,11 @@ module.exports = async function (context, req) {
 
   let parent_tweet = null;
   if (!tweet.has_photos()) {
-    parent_tweet = await tweet.get_parent_tweet();
+    if (tweet.is_quote_tweet()) {
+      parent_tweet = new Tweet(tweet.data.quoted_status);
+    } else {
+      parent_tweet = await tweet.get_parent_tweet();
+    }
     context.log.info('Parent tweet is:');
     context.log.info(parent_tweet);
 
