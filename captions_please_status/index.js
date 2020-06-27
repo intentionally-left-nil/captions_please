@@ -5,6 +5,7 @@ const {
   get_subscriptions,
   add_subscription_to_webhook,
 } = require('../shared/twitter');
+const fetch = require('node-fetch');
 
 const ensure_webhook = async (context) => {
   let webhook_status = null;
@@ -12,6 +13,7 @@ const ensure_webhook = async (context) => {
     webhook_status = await get_webhook_status();
   } catch (e) {
     context.log('Unable to get the webhook, needs manual fixing');
+    context.log(e);
     context.res = {
       status: 500,
       body: 'Failed to query webhook status from twitter',
@@ -29,6 +31,7 @@ const ensure_webhook = async (context) => {
     context.log('Deleting the old webhook');
     delete_webhook(webhook_status[0].id).catch((e) => {
       context.log('Unable to delete the old webhook, needs manual fixing');
+      context.log(e);
       context.res = {
         status: 500,
         body: 'Failed to delete the old webhook',
@@ -39,9 +42,12 @@ const ensure_webhook = async (context) => {
 
   try {
     context.log('Creating the new webhook');
+    // Warm up the webhook in case it's asleep
+    await fetch(process.env.TWITTER_WEBHOOK_URL);
     await subscribe_to_webhook(process.env.TWITTER_WEBHOOK_URL);
   } catch (e) {
     context.log('Unable to create the new webhook, needs manual fixing');
+    context.log(e);
     context.res = {
       status: 500,
       body: 'Failed to create a new webhook',
@@ -58,6 +64,7 @@ const ensure_subscription = async (context) => {
     subscriptions = await get_subscriptions();
   } catch (e) {
     context.log('Unable to get the subscriptions, needs manual fixing');
+    context.log(e);
     context.res = {
       status: 500,
       body: 'Failed to query the subscription',
@@ -71,6 +78,7 @@ const ensure_subscription = async (context) => {
       context.log('Subscription successfully added');
     } catch (e) {
       context.log('Unable to create the new subscription, needs manual fixing');
+      context.log(e);
       context.res = {
         status: 500,
         body: 'Failed to create the subscription',
