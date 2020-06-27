@@ -3,7 +3,7 @@ const OAuth = require('oauth-1.0a');
 const querystring = require('querystring');
 const fetch = require('node-fetch');
 const BadWords = require('bad-words');
-const { get_all_secrets } = require('./secrets');
+const { get_all_secrets, get_secret } = require('./secrets');
 
 const badWordFilter = new BadWords();
 
@@ -66,11 +66,27 @@ const get_from_twitter = async (endpoint, options = { method: 'GET' }) => {
   return fetch(url, options);
 };
 
-const validate_response = (response) => {
-  if (!response.ok) {
-    return Promise.reject(`Invalid response status ${response.status}`);
+const safe_stringify = (json) => {
+  try {
+    return JSON.stringify(json, null, 2);
+  } catch {
+    return 'Invalid JSON';
   }
-  return Promise.resolve(response);
+};
+
+const validate_response = (response) => {
+  return response.ok
+    ? Promise.resolve(response)
+    : response
+        .json()
+        .then((body) => Promise.reject(body))
+        .catch((body) => {
+          let message = `Invalid response code ${response.status}`;
+          if (body) {
+            message += `. Body is ${safe_stringify(body)}`;
+          }
+          return Promise.reject(message);
+        });
 };
 
 const get_json_from_twitter = async (...args) => {
@@ -113,4 +129,65 @@ const download_media = async (url) => {
     .then((response) => response.blob());
 };
 
-module.exports = { get_tweet, reply, censored_reply, download_media, whoami };
+const get_webhook_status = async () =>
+  get_json_from_twitter(
+    `account_activity/all/${process.env.TWITTER_WEBHOOK_ENV}/webhooks.json`
+  );
+
+const subscribe_to_webhook = async (callback_url) =>
+  get_json_from_twitter(
+    `account_activity/all/${process.env.TWITTER_WEBHOOK_ENV}/webhooks.json`,
+    {
+      method: 'POST',
+      body: {
+        url: callback_url,
+      },
+    }
+  );
+
+const delete_webhook = (webhook_id) =>
+  get_from_twitter(
+    `account_activity/all/${process.env.TWITTER_WEBHOOK_ENV}/webhooks/${webhook_id}.json`,
+    {
+      method: 'DELETE',
+      body: {},
+    }
+  ).then(validate_response);
+
+const add_subscription_to_webhook = () =>
+  get_from_twitter(
+    `account_activity/all/${process.env.TWITTER_WEBHOOK_ENV}/subscriptions.json`,
+    {
+      method: 'POST',
+    }
+  ).then(validate_response);
+
+const get_subscriptions = async () => {
+  const { value: bearer_token } = await get_secret('TwitterBearerToken');
+  const response = await fetch(
+    `https://api.twitter.com/1.1/account_activity/all/${process.env.TWITTER_WEBHOOK_ENV}/subscriptions/list.json`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${bearer_token}`,
+      },
+      body: null,
+    }
+  );
+  return validate_response(response).then((response) =>
+    response.json().then(({ subscriptions }) => subscriptions)
+  );
+};
+
+module.exports = {
+  get_tweet,
+  reply,
+  censored_reply,
+  download_media,
+  whoami,
+  get_webhook_status,
+  subscribe_to_webhook,
+  delete_webhook,
+  add_subscription_to_webhook,
+  get_subscriptions,
+};
