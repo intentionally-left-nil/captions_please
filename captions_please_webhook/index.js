@@ -30,13 +30,12 @@ module.exports = async function (context, req) {
     return respond_to_crc_token(context, req);
   }
 
-  context.log('New webhook request:');
-  context.log(req.body);
-
   if (!req.body.tweet_create_events) {
     context.log.info('No body, early return');
     return do_nothing(context);
   }
+
+  context.log('New webhook request:\n' + JSON.stringify(req.body, null, 2));
 
   const tweet = new Tweet(req.body.tweet_create_events[0]);
   if (!tweet.is_tweet() && !tweet.is_reply() && !tweet.is_quote_tweet()) {
