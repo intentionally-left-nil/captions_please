@@ -5,8 +5,24 @@ class Tweet {
     this.data = data;
   }
 
-  contains_handle(handle) {
-    return this.data.text.toLowerCase().includes(handle);
+  get_visible_text() {
+    // https://developer.twitter.com/en/docs/tweets/tweet-updates
+    // From the docs, display_text_range may exist in the response, containing an array
+    // of two numbers, [x, y] which correspond to the unicode codepoints indices of the visible part
+    // This can be less than the full text, if you do things like reply to a tweet. The text will contain
+    // @user_you_replied_to The message you typed
+    // even though the tweet didn't explicitly @ the user.
+    // In Javascript, to split strings according to unicode codepoints, we can use the spread operator
+    if (!this.data.display_text_range) {
+      return this.data.text;
+    }
+    const [start, end] = this.data.display_text_range;
+    // We're trusting twitter to not have the indices break multi-codepoint sequences
+    return [...this.data.text].slice(start, end).join('');
+  }
+
+  explicitly_contains_handle(handle) {
+    return this.get_visible_text().toLowerCase().includes(handle);
   }
 
   has_photos() {

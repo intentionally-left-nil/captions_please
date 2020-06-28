@@ -43,7 +43,7 @@ module.exports = async function (context, req) {
     return do_nothing(context);
   }
 
-  if (!tweet.contains_handle(BOT_HANDLE)) {
+  if (!tweet.explicitly_contains_handle(BOT_HANDLE)) {
     context.log.info('Not mentioned in the body message, early return');
     return do_nothing(context);
   }
