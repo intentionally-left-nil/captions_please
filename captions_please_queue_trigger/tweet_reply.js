@@ -39,10 +39,12 @@ const group_paragraphs_into_tweets = (paragraphs) => {
   return all_tweets;
 };
 
+const prepend_index = (message, index) => {
+  return index == null ? message : `Photo ${index + 1}:\n${message}`;
+};
+
 const reply_with_text = async (to_reply_id, paragraphs, index) => {
-  if (index != null) {
-    paragraphs[0][0] = `Photo ${index + 1}:\n ${paragraphs[0][0]}`;
-  }
+  paragraphs[0][0] = prepend_index(paragraphs[0][0], index);
 
   for (const tweet of group_paragraphs_into_tweets(paragraphs)) {
     const response = await twitter.censored_reply(to_reply_id, tweet);
@@ -52,12 +54,13 @@ const reply_with_text = async (to_reply_id, paragraphs, index) => {
 };
 
 const reply_with_caption = async (to_reply_id, caption, index) => {
-  let message = `Image Description: ${caption}`;
+  const message = prepend_index(`Image Description: ${caption}`, index);
+  const response = await twitter.censored_reply(to_reply_id, message);
+  return response.id_str;
+};
 
-  if (index != null) {
-    message = `Photo ${index + 1}:\n ${message}`;
-  }
-
+const reply_unknown_description = async (to_reply_id, index) => {
+  const message = prepend_index("I don't know what this is, sorry.", index);
   const response = await twitter.censored_reply(to_reply_id, message);
   return response.id_str;
 };
@@ -68,6 +71,8 @@ module.exports = async (to_reply_id, image_data, index) => {
       return reply_with_text(to_reply_id, image_data.value, index);
     case 'caption':
       return reply_with_caption(to_reply_id, image_data.value, index);
+    case 'unknown':
+      return reply_unknown_description(to_reply_id, index);
     default:
       throw new Error(`Unknown parsed image type ${image_data.type}`);
   }

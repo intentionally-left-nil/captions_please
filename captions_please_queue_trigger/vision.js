@@ -52,7 +52,9 @@ const vision = async (url) => {
         type: 'caption',
         value: caption,
       }
-    : null;
+    : {
+        type: 'unknown',
+      };
 };
 
 module.exports = vision;
