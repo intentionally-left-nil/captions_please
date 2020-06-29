@@ -1,37 +1,79 @@
+const twitterText = require('twitter-text');
+const runes = require('runes');
 const twitter = require('../shared/twitter');
 
-const TWEET_CHAR_LIMIT = 280;
-const re = /^(.*)\s(.+)$/;
+const get_last_whitespace_index = (graphemes) => {
+  for (let i = graphemes.length - 1; i >= 0; i--) {
+    if (graphemes[i].trim().length == 0) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+const get_valid_tweet_length = (graphemes) => {
+  for (let i = graphemes.length - 1; i >= 0; i--) {
+    const message = graphemes.slice(0, i).join('');
+    if (twitterText.parseTweet(message).valid) {
+      return i + 1;
+    }
+  }
+  throw new Error('Fatal error trying to parse the ');
+};
+
+const get_combined_tweet_if_valid = (paragraph_tweets, line) => {
+  const last_tweet =
+    paragraph_tweets.length > 0
+      ? paragraph_tweets[paragraph_tweets.length - 1]
+      : null;
+  if (last_tweet) {
+    const combined_message = `${last_tweet} ${line}`;
+    if (twitterText.parseTweet(combined_message).valid) {
+      return combined_message;
+    }
+  }
+  return null;
+};
+
+const truncate_tweet = (message) => {
+  const { weightedLength, permillage } = twitterText.parseTweet(message);
+  const max_length = Math.floor((1000 * weightedLength) / permillage);
+  const graphemes = runes(message);
+  const valid_tweet_length = get_valid_tweet_length(
+    graphemes.slice(0, max_length)
+  );
+  let beginning = graphemes.slice(0, valid_tweet_length);
+  let end = graphemes.slice(valid_tweet_length);
+  const to_cut_index = get_last_whitespace_index(beginning);
+  if (to_cut_index !== -1) {
+    const to_add = beginning.slice(0, to_cut_index);
+    const to_cut = beginning.slice(to_cut_index + 1); // eat the whitespace, since the next line will be in a new tweet
+    beginning = to_add;
+    end = to_cut.concat(end);
+  }
+  return [beginning.join(''), end.join('')];
+};
 
 const group_paragraphs_into_tweets = (paragraphs) => {
   let all_tweets = [];
   for (lines of paragraphs) {
     const paragraph_tweets = [];
     for (let i = 0; i < lines.length; ++i) {
-      const last_tweet =
-        paragraph_tweets.length > 0
-          ? paragraph_tweets[paragraph_tweets.length - 1]
-          : null;
       const line = lines[i];
-      if (line.length > TWEET_CHAR_LIMIT) {
-        const beginning = line.slice(0, TWEET_CHAR_LIMIT);
-        const end = line.slice(TWEET_CHAR_LIMIT);
-        const match = re.exec(beginning);
-        if (match) {
-          const [_, prefix, to_cut] = match;
-          paragraph_tweets.push(prefix);
-          lines.splice(i + 1, 0, to_cut + end);
+      if (twitterText.parseTweet(line).valid) {
+        const combined_message = get_combined_tweet_if_valid(
+          paragraph_tweets,
+          line
+        );
+        if (combined_message == null) {
+          paragraph_tweets.push(line);
         } else {
-          paragraph_tweets.push(beginning);
-          lines.splice(i + 1, 0, end);
+          paragraph_tweets[paragraph_tweets.length - 1] = combined_message;
         }
-      } else if (
-        last_tweet &&
-        last_tweet.length + line.length + 1 <= TWEET_CHAR_LIMIT
-      ) {
-        paragraph_tweets[paragraph_tweets.length - 1] += ' ' + line;
       } else {
-        paragraph_tweets.push(line);
+        const [beginning, end] = truncate_tweet(line);
+        paragraph_tweets.push(beginning);
+        lines.splice(i + 1, 0, end);
       }
     }
     all_tweets = all_tweets.concat(paragraph_tweets);
@@ -61,7 +103,7 @@ const reply_with_caption = async (to_reply_id, caption, index) => {
 
 const reply_unknown_description = async (to_reply_id, index) => {
   const message = prepend_index("I don't know what this is, sorry.", index);
-  const response = await twitter.censored_reply(to_reply_id, message);
+  const response = await twitter.reply(to_reply_id, message);
   return response.id_str;
 };
 

@@ -15,7 +15,9 @@
     "node-fetch": "^2.6.0",
     "oauth-1.0a": "^2.2.6",
     "promise.allsettled": "^1.0.2",
-    "querystring": "^0.2.0"
+    "querystring": "^0.2.0",
+    "runes": "^0.4.3",
+    "twitter-text": "^3.1.0"
   },
   "devDependencies": {}
 }
