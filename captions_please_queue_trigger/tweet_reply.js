@@ -52,7 +52,7 @@ const reply_with_text = async (to_reply_id, paragraphs, index) => {
 };
 
 const reply_with_caption = async (to_reply_id, caption, index) => {
-  const message = `Image Description: ${caption}`;
+  let message = `Image Description: ${caption}`;
 
   if (index != null) {
     message = `Photo ${index + 1}:\n ${message}`;
