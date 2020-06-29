@@ -65,8 +65,9 @@ module.exports = async function (context, req) {
     } else {
       parent_tweet = await tweet.get_parent_tweet();
     }
-    context.log.info('Parent tweet is:');
-    context.log.info(parent_tweet);
+    context.log.info(
+      'Parent tweet is: ' + JSON.stringify(parent_tweet, null, 2)
+    );
 
     if (!parent_tweet || !parent_tweet.has_photos()) {
       const has_invalid_media =
