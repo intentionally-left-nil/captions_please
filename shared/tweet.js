@@ -6,6 +6,16 @@ class Tweet {
   }
 
   get_visible_text() {
+    const { text, display_text_range } = this.data.extended_tweet
+      ? {
+          ...this.data.extended_tweet,
+          text: this.data.extended_tweet.full_text,
+        }
+      : this.data;
+    if (!display_text_range) {
+      return text;
+    }
+
     // https://developer.twitter.com/en/docs/tweets/tweet-updates
     // From the docs, display_text_range may exist in the response, containing an array
     // of two numbers, [x, y] which correspond to the unicode codepoints indices of the visible part
@@ -13,12 +23,9 @@ class Tweet {
     // @user_you_replied_to The message you typed
     // even though the tweet didn't explicitly @ the user.
     // In Javascript, to split strings according to unicode codepoints, we can use the spread operator
-    if (!this.data.display_text_range) {
-      return this.data.text;
-    }
-    const [start, end] = this.data.display_text_range;
+    const [start, end] = display_text_range;
     // We're trusting twitter to not have the indices break multi-codepoint sequences
-    return [...this.data.text].slice(start, end).join('');
+    return [...text].slice(start, end).join('');
   }
 
   explicitly_contains_handle(handle) {
@@ -67,10 +74,11 @@ class Tweet {
   }
 
   get_media() {
-    const extended_media = this.data.extended_entities
-      ? this.data.extended_entities.media
+    const root = this.data.extended_tweet || this.data;
+    const extended_media = root.extended_entities
+      ? root.extended_entities.media
       : null;
-    const single_media = this.data.entities ? this.data.entities.media : null;
+    const single_media = root.entities ? root.entities.media : null;
     return extended_media || single_media || [];
   }
 
