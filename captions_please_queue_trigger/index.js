@@ -16,8 +16,12 @@ async function asyncForEach(array, callback) {
 
 module.exports = async (context, item) => {
   context.log('Picking up the queue item:' + JSON.stringify(item, null, 2));
-  const image_data_promises = item.media.map(({ media_url_https }) =>
-    vision(media_url_https)
+  const image_data_promises = item.media.map(
+    ({ media_url_https, description, ext_alt_text }) =>
+      vision(media_url_https).then((vision_data) => ({
+        ...vision_data,
+        alt_text: description || ext_alt_text,
+      }))
   );
 
   const image_items = await allSettled(image_data_promises).then(

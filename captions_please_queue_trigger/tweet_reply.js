@@ -85,20 +85,34 @@ const prepend_index = (message, index) => {
   return index == null ? message : `Photo ${index + 1}:\n${message}`;
 };
 
-const reply_with_text = async (to_reply_id, paragraphs, index) => {
+const reply_with_alt_text = async (to_reply_id, alt_text) => {
+  if (alt_text) {
+    const message = `User provided description: ${alt_text}`;
+    const response = await twitter.censored_reply(to_reply_id, message);
+    to_reply_id = response.id_str;
+  }
+  return to_reply_id;
+};
+
+const reply_with_text = async (to_reply_id, image_data, index) => {
+  const paragraphs = image_data.value;
   paragraphs[0][0] = prepend_index(paragraphs[0][0], index);
 
   for (const tweet of group_paragraphs_into_tweets(paragraphs)) {
     const response = await twitter.censored_reply(to_reply_id, tweet);
     to_reply_id = response.id_str;
   }
+  to_reply_id = await reply_with_alt_text(to_reply_id, image_data.alt_text);
   return to_reply_id;
 };
 
-const reply_with_caption = async (to_reply_id, caption, index) => {
-  const message = prepend_index(`Image Description: ${caption}`, index);
+const reply_with_caption = async (to_reply_id, image_data, index) => {
+  const caption = image_data.value;
+  const message = prepend_index(`Image description: ${caption}`, index);
   const response = await twitter.censored_reply(to_reply_id, message);
-  return response.id_str;
+  to_reply_id = response.id_str;
+  to_reply_id = await reply_with_alt_text(to_reply_id, image_data.alt_text);
+  return to_reply_id;
 };
 
 const reply_unknown_description = async (to_reply_id, index) => {
@@ -110,9 +124,9 @@ const reply_unknown_description = async (to_reply_id, index) => {
 module.exports = async (to_reply_id, image_data, index) => {
   switch (image_data.type) {
     case 'text':
-      return reply_with_text(to_reply_id, image_data.value, index);
+      return reply_with_text(to_reply_id, image_data, index);
     case 'caption':
-      return reply_with_caption(to_reply_id, image_data.value, index);
+      return reply_with_caption(to_reply_id, image_data, index);
     case 'unknown':
       return reply_unknown_description(to_reply_id, index);
     default:
