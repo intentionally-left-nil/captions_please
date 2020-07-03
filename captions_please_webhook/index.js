@@ -24,12 +24,7 @@ const respond_no_photos = (context, tweet, has_invalid_media) => {
   return twitter.reply(tweet.id(), message);
 };
 
-module.exports = async function (context, req) {
-  if (req.method == 'GET') {
-    context.log('Got a CRC get request from twitter');
-    return respond_to_crc_token(context, req);
-  }
-
+const respond_to_webhook = async (context, req) => {
   if (!req.body.tweet_create_events) {
     context.log.info('No body, early return');
     return do_nothing(context);
@@ -86,4 +81,15 @@ module.exports = async function (context, req) {
   context.log(item);
   context.bindings.imageQueue = JSON.stringify(item);
   return do_nothing(context);
+};
+
+module.exports = async function (context, req) {
+  switch (req.method) {
+    case 'GET':
+      return respond_to_crc_token(context, req);
+    case 'POST':
+      return respond_to_webhook(context, req);
+    default:
+      do_nothing(context);
+  }
 };
