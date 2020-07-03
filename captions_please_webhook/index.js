@@ -14,6 +14,7 @@ const do_nothing = (context) => {
 };
 
 const respond_no_photos = (context, tweet, has_invalid_media) => {
+  context.log.info('No photos to parse, early return');
   // Even on failure, we'll respond 200, as there's nothing to retry here
   context.res = {
     status: 200,
@@ -67,7 +68,6 @@ const respond_to_webhook = async (context, req) => {
     if (!parent_tweet || !parent_tweet.has_photos()) {
       const has_invalid_media =
         tweet.has_media() || (parent_tweet && parent_tweet.has_media());
-      context.log.info('No photos to parse, early return');
       return respond_no_photos(context, tweet, has_invalid_media);
     }
   }

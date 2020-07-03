@@ -49,7 +49,7 @@ class Tweet {
   }
 
   is_quote_tweet() {
-    return this.data.is_quote_status;
+    return !this.is_retweet() && this.data.is_quote_status;
   }
 
   is_mention() {
