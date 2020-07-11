@@ -21,13 +21,13 @@ const get_valid_tweet_length = (graphemes) => {
   throw new Error('Fatal error trying to parse the ');
 };
 
-const get_combined_tweet_if_valid = (paragraph_tweets, line) => {
+const get_combined_tweet_if_valid = (paragraph_tweets, to_combine) => {
   const last_tweet =
     paragraph_tweets.length > 0
       ? paragraph_tweets[paragraph_tweets.length - 1]
       : null;
   if (last_tweet) {
-    const combined_message = `${last_tweet} ${line}`;
+    const combined_message = `${last_tweet} ${to_combine}`;
     if (twitterText.parseTweet(combined_message).valid) {
       return combined_message;
     }
@@ -56,25 +56,26 @@ const truncate_tweet = (message) => {
 
 const group_paragraphs_into_tweets = (paragraphs) => {
   let all_tweets = [];
-  for (lines of paragraphs) {
+  for (let paragraph of paragraphs) {
     const paragraph_tweets = [];
-    for (let i = 0; i < lines.length; ++i) {
-      const line = lines[i];
-      if (twitterText.parseTweet(line).valid) {
+    while (paragraph.length) {
+      if (twitterText.parseTweet(paragraph).valid) {
         const combined_message = get_combined_tweet_if_valid(
           paragraph_tweets,
-          line
+          paragraph
         );
+
         if (combined_message == null) {
-          paragraph_tweets.push(line);
+          paragraph_tweets.push(paragraph);
         } else {
           paragraph_tweets[paragraph_tweets.length - 1] = combined_message;
         }
-      } else {
-        const [beginning, end] = truncate_tweet(line);
-        paragraph_tweets.push(beginning);
-        lines.splice(i + 1, 0, end);
+        break;
       }
+
+      const [beginning, end] = truncate_tweet(paragraph);
+      paragraph_tweets.push(beginning);
+      paragraph = end;
     }
     all_tweets = all_tweets.concat(paragraph_tweets);
   }
@@ -96,7 +97,7 @@ const reply_with_alt_text = async (to_reply_id, alt_text) => {
 
 const reply_with_text = async (to_reply_id, image_data, index) => {
   const paragraphs = image_data.value;
-  paragraphs[0][0] = prepend_index(paragraphs[0][0], index);
+  paragraphs[0] = prepend_index(`Image OCR: ${paragraphs[0]}`, index);
 
   for (const tweet of group_paragraphs_into_tweets(paragraphs)) {
     const response = await twitter.censored_reply(to_reply_id, tweet);

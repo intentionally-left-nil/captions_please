@@ -8,7 +8,7 @@ const get_successful_promises = (settled_promises) =>
     .filter(({ status }) => status === 'fulfilled')
     .map(({ value }) => value);
 
-async function asyncForEach(array, callback) {
+async function async_for_each(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
   }
@@ -36,7 +36,7 @@ module.exports = async (context, item) => {
     );
   }
 
-  asyncForEach(image_items, async (image_data, i) => {
+  async_for_each(image_items, async (image_data, i) => {
     const index = image_items.length > 1 ? i : undefined;
     to_reply_id = await tweet_reply(to_reply_id, image_data, index);
   });

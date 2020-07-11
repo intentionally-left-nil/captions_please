@@ -1,44 +1,9 @@
-const { get_secret } = require('../shared/secrets');
-const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
-const ComputerVisionClient = require('@azure/cognitiveservices-computervision')
-  .ComputerVisionClient;
+const google_vision = require('./google_vision');
+const azure_vision = require('./azure_vision');
 
-const DETECT_ORIENTATION = true;
-
-const sanitize = (paragraphs) => {
-  paragraphs = paragraphs.map((lines) => lines.filter((line) => line.trim()));
-  paragraphs = paragraphs.filter((lines) => lines.length > 0);
-  return paragraphs.length > 0 ? paragraphs : null;
-};
-
-const getText = async (computerVisionClient, url) => {
-  const response = await computerVisionClient.recognizePrintedText(
-    DETECT_ORIENTATION,
-    url
-  );
-  if (!response.regions.length) {
-    return null;
-  }
-  return sanitize(
-    response.regions.map((region) =>
-      region.lines.map((line) => line.words.map(({ text }) => text).join(' '))
-    )
-  );
-};
-
-const getCaption = async (computerVisionClient, url) => {
-  response = await computerVisionClient.describeImage(url);
-  return response.captions.length ? response.captions[0].text : null;
-};
-
-const vision = async (url) => {
-  const { value: key } = await get_secret('ComputerVisionKey');
-  const computerVisionClient = new ComputerVisionClient(
-    new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': key } }),
-    'https://captionspleasecomputervision.cognitiveservices.azure.com/'
-  );
-
-  const text = await getText(computerVisionClient, url);
+module.exports = async (url) => {
+  const google_client = await google_vision.get_client();
+  const text = await google_vision.get_text(google_client, url);
   if (text) {
     return {
       type: 'text',
@@ -46,7 +11,8 @@ const vision = async (url) => {
     };
   }
 
-  const caption = await getCaption(computerVisionClient, url);
+  const azure_client = await azure_vision.get_client();
+  const caption = await azure_vision.get_caption(azure_client, url);
   return caption
     ? {
         type: 'caption',
@@ -56,5 +22,3 @@ const vision = async (url) => {
         type: 'unknown',
       };
 };
-
-module.exports = vision;
