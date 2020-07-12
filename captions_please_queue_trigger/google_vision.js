@@ -18,11 +18,13 @@ const get_text = async (google_client, url) => {
   const blocks = pages.map(({ blocks }) => blocks).flat();
   const paragraphs = blocks
     .map(({ paragraphs }) =>
-      paragraphs.map(({ words }) =>
-        words
-          .map(({ symbols }) => symbols.map(({ text }) => text).join(''))
-          .join(' ')
-      )
+      paragraphs
+        .map(({ words }) =>
+          words
+            .map(({ symbols }) => symbols.map(({ text }) => text).join(''))
+            .join(' ')
+        )
+        .join('\n\n')
     )
     .flat();
   return sanitize(paragraphs);
