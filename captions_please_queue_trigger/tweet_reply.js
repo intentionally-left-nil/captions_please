@@ -21,11 +21,8 @@ const get_valid_tweet_length = (graphemes) => {
   throw new Error('Fatal error trying to parse the ');
 };
 
-const get_combined_tweet_if_valid = (paragraph_tweets, to_combine) => {
-  const last_tweet =
-    paragraph_tweets.length > 0
-      ? paragraph_tweets[paragraph_tweets.length - 1]
-      : null;
+const get_combined_tweet_if_valid = (tweets, to_combine) => {
+  const last_tweet = tweets.length > 0 ? tweets[tweets.length - 1] : null;
   if (last_tweet) {
     const combined_message = `${last_tweet} ${to_combine}`;
     if (twitterText.parseTweet(combined_message).valid) {
@@ -54,40 +51,33 @@ const truncate_tweet = (message) => {
   return [beginning.join(''), end.join('')];
 };
 
-const group_paragraphs_into_tweets = (paragraphs) => {
-  let all_tweets = [];
-  for (let paragraph of paragraphs) {
-    const paragraph_tweets = [];
-    while (paragraph.length) {
-      if (twitterText.parseTweet(paragraph).valid) {
-        const combined_message = get_combined_tweet_if_valid(
-          paragraph_tweets,
-          paragraph
-        );
+const group_message_into_tweets = (message) => {
+  let tweets = [];
+  while (message.length) {
+    if (twitterText.parseTweet(message).valid) {
+      const combined_message = get_combined_tweet_if_valid(tweets, message);
 
-        if (combined_message == null) {
-          paragraph_tweets.push(paragraph);
-        } else {
-          paragraph_tweets[paragraph_tweets.length - 1] = combined_message;
-        }
-        break;
+      if (combined_message == null) {
+        tweets.push(message);
+      } else {
+        tweets[tweets.length - 1] = combined_message;
       }
-
-      const [beginning, end] = truncate_tweet(paragraph);
-      paragraph_tweets.push(beginning);
-      paragraph = end;
+      break;
     }
-    all_tweets = all_tweets.concat(paragraph_tweets);
+
+    const [beginning, end] = truncate_tweet(message);
+    tweets.push(beginning);
+    message = end;
   }
-  return all_tweets;
+  return tweets;
 };
 
 const prepend_index = (message, index) => {
   return index == null ? message : `Photo ${index + 1}:\n${message}`;
 };
 
-const reply = async (to_reply_id, paragraphs) => {
-  for (const tweet of group_paragraphs_into_tweets(paragraphs)) {
+const reply = async (to_reply_id, message) => {
+  for (const tweet of group_message_into_tweets(message)) {
     const response = await twitter.censored_reply(to_reply_id, tweet);
     to_reply_id = response.id_str;
   }
@@ -103,9 +93,8 @@ const reply_with_alt_text = async (to_reply_id, alt_text) => {
 };
 
 const reply_with_text = async (to_reply_id, image_data, index) => {
-  const paragraphs = image_data.value;
-  paragraphs[0] = prepend_index(`Image OCR: ${paragraphs[0]}`, index);
-  to_reply_id = await reply(to_reply_id, paragraphs);
+  const message = prepend_index(`Image OCR: ${image_data.value}`, index);
+  to_reply_id = await reply(to_reply_id, message);
   to_reply_id = await reply_with_alt_text(to_reply_id, image_data.alt_text);
   return to_reply_id;
 };
@@ -113,7 +102,7 @@ const reply_with_text = async (to_reply_id, image_data, index) => {
 const reply_with_caption = async (to_reply_id, image_data, index) => {
   const caption = image_data.value;
   const message = prepend_index(`Image description: ${caption}`, index);
-  to_reply_id = await reply(to_reply_id, [message]);
+  to_reply_id = await reply(to_reply_id, message);
   to_reply_id = await reply_with_alt_text(to_reply_id, image_data.alt_text);
   return to_reply_id;
 };

@@ -1,5 +1,4 @@
 const { get_secret } = require('../shared/secrets');
-const { sanitize } = require('./vision_utils');
 const api = require('@google-cloud/vision');
 
 const get_client = async () => {
@@ -24,7 +23,7 @@ const get_text = async (google_client, url) => {
         .join(' ')
     )
     .join('\n\n');
-  return sanitize([text]);
+  return text.trim() ? text : null;
 };
 
 module.exports = { get_text, get_client };

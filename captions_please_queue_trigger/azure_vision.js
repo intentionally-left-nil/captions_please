@@ -1,5 +1,4 @@
 const { get_secret } = require('../shared/secrets');
-const { sanitize } = require('./vision_utils');
 const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
 const ComputerVisionClient = require('@azure/cognitiveservices-computervision')
   .ComputerVisionClient;
@@ -23,13 +22,14 @@ const get_text = async (computerVisionClient, url) => {
   if (!response.regions.length) {
     return null;
   }
-  return sanitize(
-    response.regions.map(({ lines }) =>
+  const text = response.regions
+    .map(({ lines }) =>
       lines
         .map((line) => line.words.map(({ text }) => text).join(' '))
         .join(' ')
     )
-  );
+    .join('\n\n');
+  return text.trim() ? text : null;
 };
 
 const get_caption = async (computerVisionClient, url) => {
