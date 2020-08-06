@@ -14,20 +14,17 @@ const get_text = async (google_client, url) => {
   const [response] = await google_client.textDetection(url);
   if (!response.fullTextAnnotation) return null;
 
-  const { pages } = response.fullTextAnnotation;
-  const blocks = pages.map(({ blocks }) => blocks).flat();
-  const paragraphs = blocks
-    .map(({ paragraphs }) =>
-      paragraphs
-        .map(({ words }) =>
-          words
-            .map(({ symbols }) => symbols.map(({ text }) => text).join(''))
-            .join(' ')
-        )
-        .join('\n\n')
+  const paragraphs = response.fullTextAnnotation.pages
+    .map(({ blocks }) => blocks.map(({ paragraphs }) => paragraphs))
+    .flat(2);
+  const text = paragraphs
+    .map(({ words }) =>
+      words
+        .map(({ symbols }) => symbols.map(({ text }) => text).join(''))
+        .join(' ')
     )
-    .flat();
-  return sanitize(paragraphs);
+    .join('\n\n');
+  return sanitize([text]);
 };
 
 module.exports = { get_text, get_client };
